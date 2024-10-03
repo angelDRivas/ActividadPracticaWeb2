@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programa 003 - Pago Semanal</title>
+    <style>
+        /* Reset de márgenes y paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del cuerpo con fondo gradiente en tonos azul marino */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1c3b70, #0d2543); /* Degradado azul marino */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Contenedor principal */
+        .container {
+            background-color: rgba(255, 255, 255, 0.95); /* Fondo semi-transparente */
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Título en tonos azul marino */
+        h1 {
+            color: #0d2543; /* Azul marino oscuro */
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Descripción */
+        p {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        /* Botón de cálculo */
+        button {
+            padding: 10px 20px;
+            background-color: #1c3b70; /* Azul marino */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button:hover {
+            background-color: #0d2543; /* Azul marino oscuro */
+        }
+
+        /* Área de resultados */
+        .results {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: "Courier New", Courier, monospace;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+
+        /* Mensaje de error */
+        .error {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Programa 003 - Pago Semanal</h1>
+        <p>Calcula el Pago Semanal de un trabajador según las horas trabajadas.</p>
+
+        <form id="pagoForm">
+            <label for="pagoBase">Pago Base por Hora ($):</label>
+            <input type="number" id="pagoBase" placeholder="Pago Base" required min="0" step="0.01" style="display:block; width:100%; margin-bottom: 10px; padding: 10px;">
+            
+            <label for="horasTrabajadas">Horas Trabajadas:</label>
+            <input type="number" id="horasTrabajadas" placeholder="Horas Trabajadas" required min="0" style="display:block; width:100%; margin-bottom: 10px; padding: 10px;">
+            
+            <button type="button" onclick="calcularPago()">Calcular Pago Semanal</button>
+        </form>
+        
+        <div id="error" class="error"></div>
+
+        <div id="resultados" class="results" style="display: none;">
+            <h2>Resultados:</h2>
+            <p><strong>Total de Pago Normal (40 horas):</strong> $<span id="pagoNormal">0.00</span></p>
+            <p><strong>Total de Pago Doble (41 a 47 horas):</strong> $<span id="pagoDoble">0.00</span></p>
+            <p><strong>Total de Pago Triple (48 horas en adelante):</strong> $<span id="pagoTriple">0.00</span></p>
+            <p><strong>Total de Pago Semanal:</strong> $<span id="pagoTotal">0.00</span></p>
+        </div>
+    </div>
+
+    <script>
+        function calcularPago() {
+            const pagoBase = parseFloat(document.getElementById('pagoBase').value);
+            const horasTrabajadas = parseFloat(document.getElementById('horasTrabajadas').value);
+            const errorDiv = document.getElementById('error');
+            const resultadosDiv = document.getElementById('resultados');
+            const pagoNormalSpan = document.getElementById('pagoNormal');
+            const pagoDobleSpan = document.getElementById('pagoDoble');
+            const pagoTripleSpan = document.getElementById('pagoTriple');
+            const pagoTotalSpan = document.getElementById('pagoTotal');
+
+            // Limpiar resultados anteriores
+            errorDiv.textContent = '';
+            resultadosDiv.style.display = 'none';
+            pagoNormalSpan.textContent = '0.00';
+            pagoDobleSpan.textContent = '0.00';
+            pagoTripleSpan.textContent = '0.00';
+            pagoTotalSpan.textContent = '0.00';
+
+            if (isNaN(pagoBase) || isNaN(horasTrabajadas) || pagoBase <= 0 || horasTrabajadas < 0) {
+                errorDiv.textContent = 'Por favor, ingresa valores válidos.';
+                return;
+            }
+
+            let pagoNormal = 0, pagoDoble = 0, pagoTriple = 0;
+
+            if (horasTrabajadas > 0) {
+                // Cálculo de pago normal (hasta 40 horas)
+                const horasNormales = Math.min(horasTrabajadas, 40);
+                pagoNormal = horasNormales * pagoBase;
+
+                // Cálculo de pago doble (de 41 a 47 horas)
+                if (horasTrabajadas > 40) {
+                    const horasDobles = Math.min(horasTrabajadas - 40, 7);
+                    pagoDoble = horasDobles * pagoBase * 2;
+                }
+
+                // Cálculo de pago triple (más de 47 horas)
+                if (horasTrabajadas > 47) {
+                    const horasTriples = horasTrabajadas - 47;
+                    pagoTriple = horasTriples * pagoBase * 3;
+                }
+            }
+
+            const pagoTotal = pagoNormal + pagoDoble + pagoTriple;
+
+            // Mostrar resultados
+            pagoNormalSpan.textContent = pagoNormal.toFixed(2);
+            pagoDobleSpan.textContent = pagoDoble.toFixed(2);
+            pagoTripleSpan.textContent = pagoTriple.toFixed(2);
+            pagoTotalSpan.textContent = pagoTotal.toFixed(2);
+
+            resultadosDiv.style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>

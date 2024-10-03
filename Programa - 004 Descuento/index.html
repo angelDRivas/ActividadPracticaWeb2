@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROGRAMA - 004</title>
+    <style>
+        /* Reset de márgenes y paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del cuerpo con fondo gradiente en tonos naranjas */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ffcc80, #ffab40); /* Degradado naranja */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Contenedor principal */
+        .container {
+            background-color: rgba(255, 255, 255, 0.95); /* Fondo semi-transparente */
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Título en negro */
+        h1 {
+            color: #d35400; /* Naranja oscuro */
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Descripción */
+        p {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        /* Botones para agregar productos */
+        .button-group {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #ff8c00; /* Naranja */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #e67e22; /* Naranja oscuro */
+        }
+
+        /* Tabla de productos */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #ff8c00; /* Naranja */
+            color: #fff;
+        }
+
+        /* Área de resultados */
+        .results {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: "Courier New", Courier, monospace;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* Mensaje de error */
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>PROGRAMA - 004</h1>
+        <p>Calcula el total de tus productos con descuentos e IVA.</p>
+        
+        <div class="button-group">
+            <button onclick="agregarProducto()">Agregar Producto</button>
+            <button onclick="calcularTotal()">Calcular Total</button>
+            <button onclick="finalizarCompra()">Finalizar Compra</button>
+        </div>
+        
+        <form id="productosForm">
+            <table id="productosTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Costo ($)</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="productosBody">
+                    <!-- Filas de productos se agregarán aquí -->
+                </tbody>
+            </table>
+        </form>
+        
+        <div id="error" class="error"></div>
+        
+        <div id="resultados" class="results" style="display: none;">
+            <h2>Resultados:</h2>
+            <p><strong>Lista de Productos con Costos:</strong></p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Costo ($)</th>
+                    </tr>
+                </thead>
+                <tbody id="listaProductos">
+                    <!-- Lista de productos -->
+                </tbody>
+            </table>
+            <p><strong>Total sin Descuento e IVA:</strong> $<span id="totalSinDescuento">0.00</span></p>
+            <p><strong>Total con Descuento sin IVA:</strong> $<span id="totalConDescuento">0.00</span></p>
+            <p><strong>Total con Descuento e IVA:</strong> $<span id="totalConIVA">0.00</span></p>
+            <p id="detalleDescuento" style="margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <script>
+        let contador = 0;
+
+        // Función para agregar una fila de producto
+        function agregarProducto() {
+            contador++;
+            const tbody = document.getElementById('productosBody');
+
+            const fila = document.createElement('tr');
+            fila.setAttribute('id', `fila${contador}`);
+
+            fila.innerHTML = `
+                <td>${contador}</td>
+                <td><input type="text" id="producto${contador}" placeholder="Producto" required></td>
+                <td><input type="number" id="costo${contador}" placeholder="Costo" min="0" step="0.01" required></td>
+                <td><button type="button" onclick="eliminarProducto(${contador})">Eliminar</button></td>
+            `;
+
+            tbody.appendChild(fila);
+        }
+
+        // Función para eliminar una fila de producto
+        function eliminarProducto(id) {
+            const fila = document.getElementById(`fila${id}`);
+            fila.remove();
+            actualizarNumeracion();
+        }
+
+        // Función para actualizar la numeración de las filas después de eliminar
+        function actualizarNumeracion() {
+            const filas = document.querySelectorAll('#productosBody tr');
+            contador = 0;
+            filas.forEach((fila, index) => {
+                contador = index + 1;
+                fila.querySelector('td').textContent = contador;
+                fila.setAttribute('id', `fila${contador}`);
+                fila.querySelector('button').setAttribute('onclick', `eliminarProducto(${contador})`);
+            });
+        }
+
+        // Función para calcular el total, descuentos e IVA
+        function calcularTotal() {
+            const errorDiv = document.getElementById('error');
+            const resultadosDiv = document.getElementById('resultados');
+            const listaProductos = document.getElementById('listaProductos');
+            const totalSinDescuentoSpan = document.getElementById('totalSinDescuento');
+            const totalConDescuentoSpan = document.getElementById('totalConDescuento');
+            const totalConIVASpan = document.getElementById('totalConIVA');
+            const detalleDescuento = document.getElementById('detalleDescuento');
+
+            errorDiv.textContent = '';
+            resultadosDiv.style.display = 'none';
+            listaProductos.innerHTML = '';
+            totalSinDescuentoSpan.textContent = '0.00';
+            totalConDescuentoSpan.textContent = '0.00';
+            totalConIVASpan.textContent = '0.00';
+            detalleDescuento.textContent = '';
+
+            let totalSinDescuento = 0;
+            let productosValidos = true;
+
+            for (let i = 1; i <= contador; i++) {
+                const productoInput = document.getElementById(`producto${i}`);
+                const costoInput = document.getElementById(`costo${i}`);
+
+                if (productoInput && costoInput) {
+                    const nombre = productoInput.value.trim();
+                    const costo = parseFloat(costoInput.value);
+
+                    if (nombre === '' || isNaN(costo) || costo < 0) {
+                        productosValidos = false;
+                        break;
+                    }
+
+                    totalSinDescuento += costo;
+                }
+            }
+
+            if (contador === 0) {
+                errorDiv.textContent = 'Por favor, agrega al menos un producto.';
+                return;
+            }
+
+            if (!productosValidos) {
+                errorDiv.textContent = 'Por favor, completa todos los campos correctamente.';
+                return;
+            }
+
+            let descuento = 0;
+            if (totalSinDescuento >= 2000 && totalSinDescuento < 4000) {
+                descuento = totalSinDescuento * 0.25; // 25%
+            } else if (totalSinDescuento >= 4000 && totalSinDescuento < 6000) {
+                descuento = totalSinDescuento * 0.40; // 40%
+            } else if (totalSinDescuento >= 6000) {
+                descuento = totalSinDescuento * 0.50; // 50%
+            }
+
+            const totalConDescuento = totalSinDescuento - descuento;
+            const IVA = totalConDescuento * 0.05; // 5% de IVA
+            const totalConIVA = totalConDescuento + IVA;
+
+            // Mostrar productos en la lista de resultados
+            for (let i = 1; i <= contador; i++) {
+                const productoInput = document.getElementById(`producto${i}`);
+                const costoInput = document.getElementById(`costo${i}`);
+
+                if (productoInput && costoInput) {
+                    const nombre = productoInput.value.trim();
+                    const costo = parseFloat(costoInput.value);
+                    listaProductos.innerHTML += `<tr><td>${i}</td><td>${nombre}</td><td>$${costo.toFixed(2)}</td></tr>`;
+                }
+            }
+
+            // Actualizar los resultados
+            totalSinDescuentoSpan.textContent = totalSinDescuento.toFixed(2);
+            totalConDescuentoSpan.textContent = totalConDescuento.toFixed(2);
+            totalConIVASpan.textContent = totalConIVA.toFixed(2);
+
+            if (descuento > 0) {
+                const porcentajeDescuento = (descuento / totalSinDescuento) * 100;
+                detalleDescuento.textContent = `Descuento aplicado: ${porcentajeDescuento.toFixed(2)}% ($${descuento.toFixed(2)})`;
+            }
+
+            resultadosDiv.style.display = 'block';
+        }
+
+        // Función para finalizar la compra
+        function finalizarCompra() {
+            const productosBody = document.getElementById('productosBody');
+            if (productosBody.childElementCount === 0) {
+                alert('No hay productos en la lista para finalizar la compra.');
+                return;
+            }
+
+            const totalSinDescuento = document.getElementById('totalSinDescuento').textContent;
+            const totalConDescuento = document.getElementById('totalConDescuento').textContent;
+            const totalConIVA = document.getElementById('totalConIVA').textContent;
+
+            alert(`Compra finalizada.\nTotal sin Descuento: $${totalSinDescuento}\nTotal con Descuento: $${totalConDescuento}\nTotal con IVA: $${totalConIVA}`);
+
+            // Reiniciar el formulario
+            document.getElementById('productosForm').reset();
+            document.getElementById('productosBody').innerHTML = '';
+            document.getElementById('resultados').style.display = 'none';
+            document.getElementById('error').textContent = '';
+            document.getElementById('listaProductos').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
